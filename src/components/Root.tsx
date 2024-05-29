@@ -20,7 +20,6 @@ const ErrorBoundaryError: FC<{error: unknown}> = ({error}) => (
 
 const Inner: FC = () => {
   const debug = useLaunchParams().startParam === 'debug'
-
   useEffect(() => {
     if (debug) {
       import('eruda')

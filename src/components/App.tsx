@@ -4,7 +4,7 @@ import {
   bindThemeParamsCSSVars,
   bindViewportCSSVars,
   initNavigator,
-  useLaunchParams,
+  // useLaunchParams,
   useMiniApp,
   useThemeParams,
   useViewport,
@@ -15,11 +15,14 @@ import {Navigate, Route, Router, Routes} from 'react-router-dom'
 import {routes} from '@/navigation/routes.tsx'
 
 export const App: FC = () => {
-  const lp = useLaunchParams()
+  // const lp = useLaunchParams()
   const miniApp = useMiniApp()
   const themeParams = useThemeParams()
   const viewport = useViewport()
-
+  // useEffect(() => {
+  //   // miniApp.setBgColor(themeParams.sectionBgColor ?? '#ffffff')
+  //   // miniApp.setHeaderColor(themeParams.secondaryBgColor ?? '#ffffff')
+  // })
   useEffect(() => {
     return bindMiniAppCSSVars(miniApp, themeParams)
   }, [miniApp, themeParams])
@@ -32,15 +35,11 @@ export const App: FC = () => {
     return viewport && bindViewportCSSVars(viewport)
   }, [viewport])
 
-  // Create new application navigator and attach it to the browser history, so it could modify
-  // it and listen to its changes.
   const navigator = useMemo(() => initNavigator('app-navigation-state'), [])
   const [location, reactNavigator] = useIntegration(navigator)
 
-  // Don't forget to attach the navigator to allow it to control the BackButton state as well
-  // as browser history.
   useEffect(() => {
-    navigator.attach().catch(() => null)
+    void navigator.attach()
     return () => {
       navigator.detach()
     }
@@ -49,7 +48,10 @@ export const App: FC = () => {
   return (
     <AppRoot
       appearance={miniApp.isDark ? 'dark' : 'light'}
-      platform={['macos', 'ios'].includes(lp.platform) ? 'ios' : 'base'}
+      platform={'ios'}
+      style={{
+        height: '100vh',
+      }}
     >
       <Router location={location} navigator={reactNavigator}>
         <Routes>
