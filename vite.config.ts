@@ -13,6 +13,7 @@ dotenv.config({
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  base: '/waisy-tma/',
   plugins: [
     ngrok({
       authtoken: process.env.NGROK_TOKEN,
