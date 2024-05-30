@@ -1,4 +1,4 @@
-import {SDKProvider, useLaunchParams} from '@tma.js/sdk-react'
+import {SDKProvider} from '@tma.js/sdk-react'
 import {type FC, useEffect} from 'react'
 import {App} from './App.tsx'
 import {ErrorBoundary} from '@/components/ErrorBoundary.tsx'
@@ -19,19 +19,18 @@ const ErrorBoundaryError: FC<{error: unknown}> = ({error}) => (
 )
 
 const Inner: FC = () => {
-  const debug = useLaunchParams().startParam === 'debug'
   useEffect(() => {
-    if (debug) {
+    if (import.meta.env.DEV) {
       import('eruda')
         .then(lib => {
           lib.default.init()
         })
         .catch(() => null)
     }
-  }, [debug])
+  }, [])
 
   return (
-    <SDKProvider acceptCustomStyles debug={debug}>
+    <SDKProvider acceptCustomStyles debug={import.meta.env.DEV}>
       <App />
     </SDKProvider>
   )

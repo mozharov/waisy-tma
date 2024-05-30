@@ -8,4 +8,4 @@ ARG EXTRA_NODE_VERSION=20.13.1
 RUN su node -c "source /usr/local/share/nvm/nvm.sh && nvm install ${EXTRA_NODE_VERSION}"
 RUN su node -c "source /usr/local/share/nvm/nvm.sh && nvm use ${EXTRA_NODE_VERSION}"
 
-RUN su node -c "npm install -g npm@10.8.0"
+RUN su node -c "npm install -g npm@10.8.1"

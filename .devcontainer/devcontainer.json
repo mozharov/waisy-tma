@@ -5,9 +5,9 @@
   "dockerComposeFile": "docker-compose.yml",
   "service": "app",
   "workspaceFolder": "/workspaces/${localWorkspaceFolderBasename}",
-  "postCreateCommand": "npm ci",
+  "postCreateCommand": "npm i",
   "forwardPorts": [
-    8443
+    8000
   ],
   "customizations": {
     "vscode": {
