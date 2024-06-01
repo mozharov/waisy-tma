@@ -16,6 +16,7 @@ module.exports = {
     'react-refresh/only-export-components': ['warn', {allowConstantExport: true}],
     '@typescript-eslint/no-unused-vars': 'warn',
     '@typescript-eslint/restrict-template-expressions': 'off',
+    'react/no-children-prop': 'off',
   },
   parserOptions: {
     ecmaVersion: 'latest',

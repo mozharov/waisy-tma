@@ -1,58 +1,47 @@
 import {Textarea, Checkbox, Cell, ButtonCell} from '@telegram-apps/telegram-ui'
-import {retrieveLaunchParams, useThemeParams} from '@tma.js/sdk-react'
+import {initPopup, useThemeParams} from '@tma.js/sdk-react'
 import axios from 'axios'
-import {useEffect, useMemo, useState, type FC} from 'react'
+import {useCallback, useEffect, useState, type FC} from 'react'
+import {Note} from './Note.types'
+import {getHeaders} from '@/helpers'
+import debounce from 'lodash/debounce'
 
-export interface Note {
-  id: string
-  text: string
-  public: boolean
-}
-
-const origin = import.meta.env.VITE_API_ORIGIN
 const maxLength = 10000
+const defaultTextareaHeight = 24
+const defaltScrollHeight = 56
+const popup = initPopup()
 
-export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void}> = ({
+export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwner: boolean}> = ({
   note,
   removeNote,
+  isOwner,
 }) => {
   const themeParams = useThemeParams()
-  const {initDataRaw} = retrieveLaunchParams()
-  const headers = useMemo(() => ({Authorization: `tma ${initDataRaw}`}), [initDataRaw])
-
   const [textareaValue, setTextareaValue] = useState(note.text)
-  const [textareaHeight, setTextareaHeight] = useState(24)
-  const [scrollHeight, setScrollHeight] = useState(56)
-  const [isLoaded, setIsLoaded] = useState(false)
+  const [textareaHeight, setTextareaHeight] = useState(defaultTextareaHeight)
+  const [scrollHeight, setScrollHeight] = useState(defaltScrollHeight)
 
   useEffect(() => {
     const textareaElement = document.querySelector(`#textarea-${note.id}`)
     if (!textareaElement) return
-
-    if (textareaElement.scrollHeight !== scrollHeight) {
+    if (textareaElement.scrollHeight !== defaltScrollHeight) {
       setScrollHeight(textareaElement.scrollHeight)
-      setTextareaHeight(textareaHeight + textareaElement.scrollHeight - scrollHeight)
+      setTextareaHeight(defaultTextareaHeight + textareaElement.scrollHeight - defaltScrollHeight)
     }
-    setTimeout(() => {
-      setIsLoaded(true)
-    }, 0)
-  }, [note.id, scrollHeight, textareaHeight])
+  }, [note.id])
 
-  const saveNoteText = async (text: string) => {
-    try {
-      await axios.put(`${origin}/notes/${note.id}`, {text}, {headers})
-    } catch (error) {
-      console.error(error)
-    }
-  }
-
-  const handleTextareaChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const saveTextDebounced = useCallback(
+    debounce((noteId: string, text: string) => {
+      console.log('send api')
+      saveText(noteId, text)
+    }, 500),
+    []
+  )
+  const handleTextChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     const {value} = event.target
     if (value.length > maxLength) return
     setTextareaValue(value)
-    note.text = value
-    // TODO: debounce
-    void saveNoteText(value)
+    saveTextDebounced(note.id, value)
 
     if (event.target.scrollHeight !== scrollHeight) {
       setScrollHeight(event.target.scrollHeight)
@@ -61,34 +50,33 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void}> = ({
   }
 
   const [publicDisabled, setPublicDisabled] = useState(false)
-  const savePublic = async (isPublic: boolean) => {
-    try {
-      await axios.put(`${origin}/notes/${note.id}`, {public: isPublic}, {headers})
-    } catch (error) {
-      console.error(error)
-      note.public = !note.public
-      setIsPublic(note.public)
-    }
-    setPublicDisabled(false)
-  }
-
   const [isPublic, setIsPublic] = useState(note.public)
-
-  const handlePublicChange = () => {
+  const handlePublicChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPublicDisabled(true)
-    note.public = !note.public
-    setIsPublic(note.public)
-    void savePublic(note.public)
+    const value = event.target.checked
+    setIsPublic(value)
+    sendPublicValue(note.id, value)
+      .catch(() => setIsPublic(!value))
+      .finally(() => setPublicDisabled(false))
   }
 
-  const [buttonDisabled, setButtonDisabled] = useState(false)
   const handleDelete = () => {
-    setButtonDisabled(true)
+    if (textareaValue.length && popup.supports('open')) {
+      popup
+        .open({
+          message: 'Are you sure you want to delete this note?',
+          buttons: [{text: 'Delete', type: 'destructive', id: 'delete'}, {type: 'cancel'}],
+        })
+        .then(buttonId => {
+          if (buttonId === 'delete') {
+            removeNote(note.id)
+            deleteNote(note.id)
+          }
+        })
+      return
+    }
     removeNote(note.id)
-    axios.delete(`${origin}/notes/${note.id}`, {headers}).catch((error: unknown) => {
-      console.error(error)
-      setButtonDisabled(false)
-    })
+    deleteNote(note.id)
   }
 
   return (
@@ -98,37 +86,38 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void}> = ({
         borderRadius: 20,
         padding: 10,
       }}
-      className={isLoaded ? 'fade-in loaded' : 'fade-in'}
     >
-      <div style={{paddingBottom: 10, display: 'flex', justifyContent: 'space-between'}}>
-        <div>
-          <ButtonCell
-            onClick={handleDelete}
-            disabled={buttonDisabled}
-            style={{height: 32}}
-            mode="destructive"
-          >
-            Delete
-          </ButtonCell>
+      {isOwner && (
+        <div style={{paddingBottom: 10, display: 'flex', justifyContent: 'space-between'}}>
+          <div>
+            <ButtonCell onClick={handleDelete} style={{height: 32}} mode="destructive">
+              Delete
+            </ButtonCell>
+          </div>
+          <div>
+            <Cell
+              after={
+                <Checkbox
+                  disabled={publicDisabled}
+                  onChange={handlePublicChange}
+                  checked={isPublic}
+                />
+              }
+              style={{
+                backgroundColor: 'unset',
+                height: 32,
+              }}
+              interactiveAnimation="background"
+              subtitle="Public"
+            />
+          </div>
         </div>
-        <div>
-          <Cell
-            after={
-              <Checkbox disabled={publicDisabled} onClick={handlePublicChange} checked={isPublic} />
-            }
-            style={{
-              backgroundColor: 'unset',
-              height: 32,
-            }}
-            interactiveAnimation="background"
-            subtitle="Public"
-          />
-        </div>
-      </div>
+      )}
       <Textarea
         id={`textarea-${note.id}`}
         value={textareaValue}
-        onChange={handleTextareaChange}
+        onChange={handleTextChange}
+        disabled={!isOwner}
         style={{
           height: textareaHeight,
           backgroundColor: themeParams.bgColor,
@@ -138,4 +127,18 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void}> = ({
       />
     </div>
   )
+}
+
+const apiOrigin = import.meta.env.VITE_API_ORIGIN
+const headers = getHeaders()
+async function sendPublicValue(noteId: string, value: boolean): Promise<void> {
+  await axios.put(`${apiOrigin}/notes/${noteId}`, {public: value}, {headers})
+}
+
+async function deleteNote(noteId: string): Promise<void> {
+  await axios.delete(`${apiOrigin}/notes/${noteId}`, {headers})
+}
+
+async function saveText(noteId: string, text: string): Promise<void> {
+  await axios.put(`${apiOrigin}/notes/${noteId}`, {text}, {headers})
 }

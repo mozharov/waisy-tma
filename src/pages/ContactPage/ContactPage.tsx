@@ -1,132 +1,114 @@
-import {Headline, Placeholder} from '@telegram-apps/telegram-ui'
 import {useEffect, useMemo, useState, type FC} from 'react'
-import {Note} from '@/components/NoteBlock/NoteBlock'
-import axios from 'axios'
-import {retrieveLaunchParams} from '@tma.js/sdk-react'
-import {AvatarBlock} from '@/components/AvatarBlock/AvatarBlock'
+import axios, {AxiosError} from 'axios'
+import {ContactInfo} from '@/components/ContactInfo/ContactInfo'
 import {NotFound} from '@/components/NotFound/NotFound'
 import {Loader} from '@/components/Loader/Loader'
 import {NotesList} from '@/components/NotesList/NotesList'
 import {AddNoteButton} from '@/components/AddNoteButton/AddNoteButton'
+import {Contact} from './Contact.types'
+import {getContactId, getHeaders} from '@/helpers'
+import {UnknownError} from '@/components/UnknownError/UnknownError'
+import {Note} from '@/components/NoteBlock/Note.types'
+import {retrieveLaunchParams} from '@tma.js/sdk-react'
 
-const origin = import.meta.env.VITE_API_ORIGIN
+// TODO: изменить скролл на красивый на ПК
+// TODO: добавить поддержку русского языка, по-умолчанию ставится язык пользователя телеграм
+
 const maxNotes = 300
 
-export interface Contact {
-  id: string
-  telegramId: number
-  name: string
-  username: string
-  photo: string
-  public: boolean
-  owner: {
-    id: string
-    telegramId: string
-  }
-}
-
-// TODO: изменить скролл на красивый
+const {initData} = retrieveLaunchParams()
+const user = initData?.user
 
 export const ContactPage: FC = () => {
-  const {initDataRaw} = retrieveLaunchParams()
-  const headers = useMemo(() => ({Authorization: `tma ${initDataRaw}`}), [initDataRaw])
-  const search = window.location.search
-  const telegramContactId = useMemo(() => {
-    return Number(new URLSearchParams(search).get('telegramContactId'))
-  }, [search])
-  const [contact, setContact] = useState<Contact | null>(null)
+  const [unknownError, setUnknownError] = useState(false)
   const [notFound, setNotFound] = useState(false)
+
+  const contactId = useMemo(() => getContactId(), [])
+
+  if (!contactId) return <NotFound />
+
+  const [contact, setContact] = useState<Contact | null>(null)
+  const [isOwner, setIsOwner] = useState(false)
+
+  useEffect(() => {
+    getContact(contactId)
+      .then(contact => {
+        setContact(contact)
+        if (contact.owner.telegramId.toString() === user?.id.toString()) setIsOwner(true)
+      })
+      .catch((error: unknown) => {
+        if (error instanceof AxiosError) {
+          const status = error.response?.status
+          if (status === 404 || status === 403) {
+            setNotFound(true)
+            return
+          }
+        }
+        setUnknownError(true)
+      })
+  }, [contactId])
+
   const [notes, setNotes] = useState<Note[] | null>(null)
-  const [buttonDisabled, setButtonDisabled] = useState(false)
+  useEffect(() => {
+    getNotes(contactId)
+      .then(setNotes)
+      .catch((error: unknown) => {
+        if (error instanceof AxiosError) {
+          const status = error.response?.status
+          if (status === 404 || status === 403) {
+            setNotFound(true)
+            return
+          }
+        }
+        setUnknownError(true)
+      })
+  }, [contactId])
 
   const removeNote = (id: string) => {
-    if (!notes) return
-    setNotes(notes.filter(note => note.id !== id))
+    if (notes) setNotes(notes.filter(note => note.id !== id))
   }
-
+  const addNote = (note: Note) => {
+    if (notes) setNotes([...notes, note])
+  }
+  const [buttonDisabled, setButtonDisabled] = useState(false)
   const handleAddNote = () => {
     setButtonDisabled(true)
-    if (!contact || !notes) return
-    axios
-      .post(`${origin}/notes/${contact.telegramId}`, {text: ''}, {headers})
-      .then(res => {
-        const data = res.data as Note
-        setNotes([...notes, data])
-      })
-      .catch((error: unknown) => {
-        console.error(error)
-      })
-      .finally(() => {
-        setButtonDisabled(false)
-      })
+    sendNote(contactId)
+      .then(addNote)
+      .finally(() => setButtonDisabled(false))
   }
 
-  useEffect(() => {
-    if (!telegramContactId || isNaN(telegramContactId)) {
-      console.error('Invalid userId')
-      setNotFound(true)
-      return
-    }
-    axios
-      .get(`${origin}/contacts/${telegramContactId}`, {headers})
-      .then(res => {
-        const data = res.data as Contact
-        data.username = `@${data.username}`
-        setContact(data)
-      })
-      .catch((error: unknown) => {
-        console.error(error)
-        setNotFound(true)
-      })
-  }, [telegramContactId, initDataRaw, headers])
-
-  useEffect(() => {
-    if (!contact) return
-    axios
-      .get(`${origin}/notes/${telegramContactId}`, {headers})
-      .then(res => {
-        const data = res.data as Note[]
-        setNotes(data)
-      })
-      .catch((error: unknown) => {
-        console.error(error)
-        setNotFound(true)
-      })
-  }, [contact, telegramContactId, initDataRaw, headers])
-
-  const [headlineLoaded, setHeadlineLoaded] = useState(false)
-  const showHeadline = !!notes?.length
-  useEffect(() => {
-    if (!showHeadline) return
-    setTimeout(() => {
-      setHeadlineLoaded(true)
-    }, 0)
-  }, [showHeadline])
-
   if (notFound) return <NotFound />
+  if (unknownError || !initData || !user) return <UnknownError />
   if (!contact || !notes) return <Loader />
 
+  const maxNotesReached = notes.length >= maxNotes
   return (
     <div>
-      <AvatarBlock contact={contact} />
+      <ContactInfo contact={contact} isOwner={isOwner} />
 
-      {notes.length ? (
-        <div
-          style={{padding: '0px 40px'}}
-          className={headlineLoaded ? 'fade-in loaded' : 'fade-in'}
-        >
-          <Headline>Notes</Headline>
-        </div>
-      ) : (
-        <Placeholder description="You don't have any notes about this contact" />
+      <NotesList removeNote={removeNote} notes={notes} isOwner={isOwner} />
+
+      {isOwner && (
+        <AddNoteButton disabled={maxNotesReached || buttonDisabled} onClick={handleAddNote} />
       )}
-
-      <NotesList removeNote={removeNote} notes={notes} />
-
-      <AddNoteButton
-        disabled={notes.length >= maxNotes || buttonDisabled}
-        onClick={handleAddNote}
-      />
     </div>
   )
+}
+
+const headers = getHeaders()
+const apiOrigin = import.meta.env.VITE_API_ORIGIN
+async function getContact(id: string): Promise<Contact> {
+  const res = await axios.get(`${apiOrigin}/contacts/${id}`, {headers})
+  return res.data as Contact
+}
+
+async function getNotes(contactId: string): Promise<Note[]> {
+  const res = await axios.get(`${apiOrigin}/contacts/${contactId}/notes`, {headers})
+  return res.data as Note[]
+}
+
+async function sendNote(contactId: string): Promise<Note> {
+  const res = await axios.post(`${apiOrigin}/notes`, {contactId}, {headers})
+  return res.data as Note
 }

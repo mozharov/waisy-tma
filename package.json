@@ -12,12 +12,14 @@
     "@tma.js/sdk-react": "^2.2.1",
     "axios": "^1.7.2",
     "eruda": "^3.0.1",
+    "lodash": "^4.17.21",
     "lottie-react": "^2.4.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.23.1"
   },
   "devDependencies": {
+    "@types/lodash": "^4.17.4",
     "@types/node": "^20.12.12",
     "@types/react": "^18.2.66",
     "@types/react-dom": "^18.2.22",

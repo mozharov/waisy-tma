@@ -1,16 +1,24 @@
 import {List} from '@telegram-apps/telegram-ui'
 import {FC} from 'react'
-import {Note, NoteBlock} from '../NoteBlock/NoteBlock'
+import {NoteBlock} from '../NoteBlock/NoteBlock'
+import {TitleBlock} from '../TitleBlock/TitleBlock'
+import {Note} from '../NoteBlock/Note.types'
 
-export const NotesList: FC<{notes: Note[]; removeNote: (id: string) => void}> = ({
+export const NotesList: FC<{notes: Note[]; removeNote: (id: string) => void; isOwner: boolean}> = ({
   notes,
   removeNote,
+  isOwner,
 }) => {
+  const showTitle = !!notes.length
+
   return (
-    <List style={{paddingTop: 20}}>
-      {notes.map(note => (
-        <NoteBlock removeNote={removeNote} key={note.id} note={note} />
-      ))}
-    </List>
+    <div>
+      <TitleBlock showTitle={showTitle} isOwner={isOwner} />
+      <List style={{paddingTop: 20}}>
+        {notes.map(note => (
+          <NoteBlock removeNote={removeNote} key={note.id} note={note} isOwner={isOwner} />
+        ))}
+      </List>
+    </div>
   )
 }
