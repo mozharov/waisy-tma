@@ -1,4 +1,4 @@
-import {Headline} from '@telegram-apps/telegram-ui'
+import {Headline, Placeholder} from '@telegram-apps/telegram-ui'
 import {useEffect, useMemo, useState, type FC} from 'react'
 import {Note} from '@/components/NoteBlock/NoteBlock'
 import axios from 'axios'
@@ -38,6 +38,11 @@ export const ContactPage: FC = () => {
   const [notFound, setNotFound] = useState(false)
   const [notes, setNotes] = useState<Note[] | null>(null)
   const [buttonDisabled, setButtonDisabled] = useState(false)
+
+  const removeNote = (id: string) => {
+    if (!notes) return
+    setNotes(notes.filter(note => note.id !== id))
+  }
 
   const handleAddNote = () => {
     setButtonDisabled(true)
@@ -90,12 +95,13 @@ export const ContactPage: FC = () => {
   }, [contact, telegramContactId, initDataRaw, headers])
 
   const [headlineLoaded, setHeadlineLoaded] = useState(false)
+  const showHeadline = !!notes?.length
   useEffect(() => {
-    if (!notes?.length) return
+    if (!showHeadline) return
     setTimeout(() => {
       setHeadlineLoaded(true)
     }, 0)
-  }, [!!notes?.length])
+  }, [showHeadline])
 
   if (notFound) return <NotFound />
   if (!contact || !notes) return <Loader />
@@ -111,9 +117,11 @@ export const ContactPage: FC = () => {
         >
           <Headline>Notes</Headline>
         </div>
-      ) : null}
+      ) : (
+        <Placeholder description="You don't have any notes about this contact" />
+      )}
 
-      <NotesList notes={notes} />
+      <NotesList removeNote={removeNote} notes={notes} />
 
       <AddNoteButton
         disabled={notes.length >= maxNotes || buttonDisabled}
