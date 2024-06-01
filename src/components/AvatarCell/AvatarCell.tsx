@@ -9,6 +9,7 @@ export const AvatarCell: FC<{contact: Contact}> = ({contact}) => {
   const themeParams = useThemeParams()
   const [visibleAvatarSkelet, setVisibleAvatarSkelet] = useState(!!contact.photo)
   const char = contact.name ? contact.name[0] : '?'
+  const username = contact.username && `@${contact.username}`
 
   const photoUrl = contact.photo && `${apiOrigin}/files/${contact.photo}`
   return (
@@ -34,7 +35,7 @@ export const AvatarCell: FC<{contact: Contact}> = ({contact}) => {
           />
         </Skeleton>
       }
-      subtitle={contact.username}
+      subtitle={username}
     >
       {contact.name}
     </Cell>

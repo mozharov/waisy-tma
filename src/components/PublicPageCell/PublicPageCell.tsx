@@ -1,11 +1,13 @@
 import {Cell, Checkbox} from '@telegram-apps/telegram-ui'
 import {FC} from 'react'
+import {useTranslation} from 'react-i18next'
 
 export const PublicPageCell: FC<{
   onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
   checked: boolean
   disabled?: boolean
 }> = ({onChange, checked, disabled}) => {
+  const {t} = useTranslation()
   return (
     <div>
       <Cell
@@ -15,7 +17,7 @@ export const PublicPageCell: FC<{
           height: 32,
         }}
         interactiveAnimation="background"
-        subtitle="Public page"
+        subtitle={t('public_page')}
       />
     </div>
   )

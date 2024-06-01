@@ -4,7 +4,6 @@ import {
   bindThemeParamsCSSVars,
   bindViewportCSSVars,
   initNavigator,
-  // useLaunchParams,
   useMiniApp,
   useThemeParams,
   useViewport,
@@ -15,14 +14,10 @@ import {Navigate, Route, Router, Routes} from 'react-router-dom'
 import {routes} from '@/navigation/routes.tsx'
 
 export const App: FC = () => {
-  // const lp = useLaunchParams()
   const miniApp = useMiniApp()
   const themeParams = useThemeParams()
   const viewport = useViewport()
-  // useEffect(() => {
-  //   // miniApp.setBgColor(themeParams.sectionBgColor ?? '#ffffff')
-  //   // miniApp.setHeaderColor(themeParams.secondaryBgColor ?? '#ffffff')
-  // })
+
   useEffect(() => {
     return bindMiniAppCSSVars(miniApp, themeParams)
   }, [miniApp, themeParams])

@@ -5,6 +5,7 @@ import {useCallback, useEffect, useState, type FC} from 'react'
 import {Note} from './Note.types'
 import {getHeaders} from '@/helpers'
 import debounce from 'lodash/debounce'
+import {useTranslation} from 'react-i18next'
 
 const maxLength = 10000
 const defaultTextareaHeight = 24
@@ -16,6 +17,7 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
   removeNote,
   isOwner,
 }) => {
+  const {t} = useTranslation()
   const themeParams = useThemeParams()
   const [textareaValue, setTextareaValue] = useState(note.text)
   const [textareaHeight, setTextareaHeight] = useState(defaultTextareaHeight)
@@ -32,7 +34,6 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
 
   const saveTextDebounced = useCallback(
     debounce((noteId: string, text: string) => {
-      console.log('send api')
       saveText(noteId, text)
     }, 500),
     []
@@ -64,8 +65,8 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
     if (textareaValue.length && popup.supports('open')) {
       popup
         .open({
-          message: 'Are you sure you want to delete this note?',
-          buttons: [{text: 'Delete', type: 'destructive', id: 'delete'}, {type: 'cancel'}],
+          message: t('sure_delete'),
+          buttons: [{text: t('delete'), type: 'destructive', id: 'delete'}, {type: 'cancel'}],
         })
         .then(buttonId => {
           if (buttonId === 'delete') {
@@ -91,7 +92,7 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
         <div style={{paddingBottom: 10, display: 'flex', justifyContent: 'space-between'}}>
           <div>
             <ButtonCell onClick={handleDelete} style={{height: 32}} mode="destructive">
-              Delete
+              {t('delete')}
             </ButtonCell>
           </div>
           <div>
@@ -108,7 +109,7 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
                 height: 32,
               }}
               interactiveAnimation="background"
-              subtitle="Public"
+              subtitle={t('public_note')}
             />
           </div>
         </div>

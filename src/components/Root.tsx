@@ -1,5 +1,6 @@
 import {SDKProvider} from '@tma.js/sdk-react'
 import {type FC, useEffect} from 'react'
+import '@/i18n/i18n.ts'
 import {App} from './App.tsx'
 import {ErrorBoundary} from '@/components/ErrorBoundary.tsx'
 

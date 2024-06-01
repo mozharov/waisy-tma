@@ -11,9 +11,6 @@ import {UnknownError} from '@/components/UnknownError/UnknownError'
 import {Note} from '@/components/NoteBlock/Note.types'
 import {retrieveLaunchParams} from '@tma.js/sdk-react'
 
-// TODO: изменить скролл на красивый на ПК
-// TODO: добавить поддержку русского языка, по-умолчанию ставится язык пользователя телеграм
-
 const maxNotes = 300
 
 const {initData} = retrieveLaunchParams()
@@ -25,12 +22,11 @@ export const ContactPage: FC = () => {
 
   const contactId = useMemo(() => getContactId(), [])
 
-  if (!contactId) return <NotFound />
-
   const [contact, setContact] = useState<Contact | null>(null)
   const [isOwner, setIsOwner] = useState(false)
 
   useEffect(() => {
+    if (!contactId) return
     getContact(contactId)
       .then(contact => {
         setContact(contact)
@@ -50,6 +46,7 @@ export const ContactPage: FC = () => {
 
   const [notes, setNotes] = useState<Note[] | null>(null)
   useEffect(() => {
+    if (!contactId) return
     getNotes(contactId)
       .then(setNotes)
       .catch((error: unknown) => {
@@ -72,13 +69,16 @@ export const ContactPage: FC = () => {
   }
   const [buttonDisabled, setButtonDisabled] = useState(false)
   const handleAddNote = () => {
+    if (!contactId) return
     setButtonDisabled(true)
-    sendNote(contactId)
+    void sendNote(contactId)
       .then(addNote)
-      .finally(() => setButtonDisabled(false))
+      .finally(() => {
+        setButtonDisabled(false)
+      })
   }
 
-  if (notFound) return <NotFound />
+  if (notFound || !contactId) return <NotFound />
   if (unknownError || !initData || !user) return <UnknownError />
   if (!contact || !notes) return <Loader />
 

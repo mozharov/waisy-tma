@@ -8,6 +8,7 @@ import {getHeaders} from '@/helpers'
 import axios from 'axios'
 import {initUtils, initPopup} from '@tma.js/sdk'
 import {retrieveLaunchParams} from '@tma.js/sdk-react'
+import {useTranslation} from 'react-i18next'
 
 const utils = initUtils()
 const popup = initPopup()
@@ -16,6 +17,7 @@ const botUsername = import.meta.env.VITE_BOT_USERNAME
 const {initData} = retrieveLaunchParams()
 
 export const ContactInfo: FC<{contact: Contact; isOwner: boolean}> = ({contact, isOwner}) => {
+  const {t} = useTranslation()
   const [isPublic, setIsPublic] = useState(contact.public)
   const [publicDisabled, setPublicDisabled] = useState(false)
 
@@ -28,18 +30,20 @@ export const ContactInfo: FC<{contact: Contact; isOwner: boolean}> = ({contact, 
         setIsPublic(!checked)
         console.error(error)
       })
-      .finally(() => setPublicDisabled(false))
+      .finally(() => {
+        setPublicDisabled(false)
+      })
   }
 
   const handleShare = () => {
     if (!isPublic) {
-      popup.open({message: 'Make page public before sharing'})
+      void popup.open({message: t('make_public')})
       return
     }
-    let text = `There is my notes about `
+    let text = t('share_text')
     if (contact.username) text += `@${contact.username}`
-    else if (contact.name) text += `${contact.name}`
-    else text += 'this user.'
+    else if (contact.name) text += contact.name
+    else text += t('shate_text_end')
     utils.openTelegramLink(
       `https://t.me/share/url?url=https://t.me/${botUsername}/${appName}?startapp=${contact.id}&text=${text}`
     )
@@ -59,7 +63,9 @@ export const ContactInfo: FC<{contact: Contact; isOwner: boolean}> = ({contact, 
       .catch((error: unknown) => {
         console.error(error)
       })
-      .finally(() => setOpenNotesDisabled(false))
+      .finally(() => {
+        setOpenNotesDisabled(false)
+      })
   }
 
   return (
@@ -79,7 +85,7 @@ export const ContactInfo: FC<{contact: Contact; isOwner: boolean}> = ({contact, 
                 onClick={handleShare}
                 style={{height: 32, opacity: isPublic ? undefined : 0.3}}
               >
-                Share
+                {t('share')}
               </ButtonCell>
             </div>
             <PublicPageCell disabled={publicDisabled} onChange={handlePublic} checked={isPublic} />
@@ -89,15 +95,19 @@ export const ContactInfo: FC<{contact: Contact; isOwner: boolean}> = ({contact, 
         )}
 
         <AvatarCell contact={contact} />
-        <div style={{padding: 10}}>
-          <Divider />
-        </div>
-        <div>
-          <Cell
-            description="Someone's public notes about this user"
-            style={{height: 32, backgroundColor: 'unset'}}
-          />
-        </div>
+        {!isOwner && (
+          <div>
+            <div style={{padding: 10}}>
+              <Divider />
+            </div>
+            <div>
+              <Cell
+                description={t('public_notes')}
+                style={{height: 32, backgroundColor: 'unset'}}
+              />
+            </div>
+          </div>
+        )}
       </Block>
       {!isOwner && (
         <div style={{padding: '0px 40px 40px'}}>
@@ -108,7 +118,7 @@ export const ContactInfo: FC<{contact: Contact; isOwner: boolean}> = ({contact, 
             stretched={true}
             onClick={handleOpenNotes}
           >
-            Open my notes
+            {t('my_notes')}
           </Button>
         </div>
       )}
