@@ -8,7 +8,6 @@ body {
   transition: opacity 0.2s ease-in-out;
 }
 
-.fade-in-loaded {
+.fade-in.loaded {
   opacity: 1;
-  transition: opacity 0.2s ease-in-out;
 }

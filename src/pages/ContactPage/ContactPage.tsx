@@ -1,22 +1,20 @@
-import {
-  List,
-  Placeholder,
-  Avatar,
-  Button,
-  Headline,
-  Spinner,
-  Skeleton,
-} from '@telegram-apps/telegram-ui'
+import {Headline} from '@telegram-apps/telegram-ui'
 import {useEffect, useMemo, useState, type FC} from 'react'
-import {Block} from '@/components/Block/Block'
-import {NoteBlock} from '@/components/NoteBlock/NoteBlock'
+import {Note} from '@/components/NoteBlock/NoteBlock'
 import axios from 'axios'
-import notFoundLottie from './not-found.json'
-import Lottie from 'lottie-react'
 import {retrieveLaunchParams} from '@tma.js/sdk-react'
+import {AvatarBlock} from '@/components/AvatarBlock/AvatarBlock'
+import {NotFound} from '@/components/NotFound/NotFound'
+import {Loader} from '@/components/Loader/Loader'
+import {NotesList} from '@/components/NotesList/NotesList'
+import {AddNoteButton} from '@/components/AddNoteButton/AddNoteButton'
 
-interface Contact {
+const origin = import.meta.env.VITE_API_ORIGIN
+const maxNotes = 300
+
+export interface Contact {
   id: string
+  telegramId: number
   name: string
   username: string
   photo: string
@@ -27,91 +25,100 @@ interface Contact {
   }
 }
 
+// TODO: изменить скролл на красивый
+
 export const ContactPage: FC = () => {
   const {initDataRaw} = retrieveLaunchParams()
+  const headers = useMemo(() => ({Authorization: `tma ${initDataRaw}`}), [initDataRaw])
   const search = window.location.search
-  const userId = useMemo(() => new URLSearchParams(search).get('userId'), [search])
+  const telegramContactId = useMemo(() => {
+    return Number(new URLSearchParams(search).get('telegramContactId'))
+  }, [search])
   const [contact, setContact] = useState<Contact | null>(null)
-  const [visibleAvatarSkelet, setVisibleAvatarSkelet] = useState(true)
   const [notFound, setNotFound] = useState(false)
+  const [notes, setNotes] = useState<Note[] | null>(null)
+  const [buttonDisabled, setButtonDisabled] = useState(false)
+
+  const handleAddNote = () => {
+    setButtonDisabled(true)
+    if (!contact || !notes) return
+    axios
+      .post(`${origin}/notes/${contact.telegramId}`, {text: ''}, {headers})
+      .then(res => {
+        const data = res.data as Note
+        setNotes([...notes, data])
+      })
+      .catch((error: unknown) => {
+        console.error(error)
+      })
+      .finally(() => {
+        setButtonDisabled(false)
+      })
+  }
 
   useEffect(() => {
-    if (!userId) throw new Error('No userId')
-    void axios
-      .get(`${import.meta.env.VITE_API_ORIGIN}/contacts/${userId}`, {
-        headers: {
-          Authorization: `tma ${initDataRaw}`,
-        },
-      })
-      .then(response => {
-        const data = response.data as Contact
+    if (!telegramContactId || isNaN(telegramContactId)) {
+      console.error('Invalid userId')
+      setNotFound(true)
+      return
+    }
+    axios
+      .get(`${origin}/contacts/${telegramContactId}`, {headers})
+      .then(res => {
+        const data = res.data as Contact
         data.username = `@${data.username}`
         setContact(data)
       })
-      .catch(() => {
+      .catch((error: unknown) => {
+        console.error(error)
         setNotFound(true)
       })
-  }, [userId, initDataRaw])
+  }, [telegramContactId, initDataRaw, headers])
 
-  if (notFound) {
-    return (
-      <div
-        style={{height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}
-      >
-        <Placeholder description="Contact not found">
-          <Lottie animationData={notFoundLottie} style={{width: 150}} />
-        </Placeholder>
-      </div>
-    )
-  }
+  useEffect(() => {
+    if (!contact) return
+    axios
+      .get(`${origin}/notes/${telegramContactId}`, {headers})
+      .then(res => {
+        const data = res.data as Note[]
+        setNotes(data)
+      })
+      .catch((error: unknown) => {
+        console.error(error)
+        setNotFound(true)
+      })
+  }, [contact, telegramContactId, initDataRaw, headers])
 
-  if (!contact) {
-    return (
-      <div
-        style={{height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}
-      >
-        <Placeholder>
-          <Spinner size="l" />
-        </Placeholder>
-      </div>
-    )
-  }
+  const [headlineLoaded, setHeadlineLoaded] = useState(false)
+  useEffect(() => {
+    if (!notes?.length) return
+    setTimeout(() => {
+      setHeadlineLoaded(true)
+    }, 0)
+  }, [!!notes?.length])
+
+  if (notFound) return <NotFound />
+  if (!contact || !notes) return <Loader />
 
   return (
     <div>
-      <Block>
-        <Placeholder header={contact.name} description={contact.username}>
-          {contact.photo ? (
-            <Skeleton
-              visible={visibleAvatarSkelet}
-              style={{borderRadius: '100%', overflow: 'hidden', width: 96, height: 96}}
-            >
-              <Avatar
-                size={96}
-                src={contact.photo}
-                className={visibleAvatarSkelet ? 'fade-in' : 'fade-in-loaded'}
-                onLoad={() => {
-                  setVisibleAvatarSkelet(false)
-                }}
-              />
-            </Skeleton>
-          ) : null}
-        </Placeholder>
-      </Block>
+      <AvatarBlock contact={contact} />
 
-      <div style={{padding: '0px 20px'}}>
-        <Headline>Notes</Headline>
-      </div>
-      <List style={{paddingTop: 20}}>
-        <NoteBlock />
-        <NoteBlock />
-      </List>
+      {notes.length ? (
+        <div
+          style={{padding: '0px 40px'}}
+          className={headlineLoaded ? 'fade-in loaded' : 'fade-in'}
+        >
+          <Headline>Notes</Headline>
+        </div>
+      ) : null}
 
-      <div style={{padding: 20}}>
-        <Button mode="filled" size="s" stretched={true}>
-          Add a note
-        </Button>
-      </div>
+      <NotesList notes={notes} />
+
+      <AddNoteButton
+        disabled={notes.length >= maxNotes || buttonDisabled}
+        onClick={handleAddNote}
+      />
     </div>
   )
 }
