@@ -36,10 +36,12 @@ export const ContactPage: FC = () => {
         if (error instanceof AxiosError) {
           const status = error.response?.status
           if (status === 404 || status === 403) {
+            console.error(error)
             setNotFound(true)
             return
           }
         }
+        console.error(error)
         setUnknownError(true)
       })
   }, [contactId])
@@ -53,10 +55,12 @@ export const ContactPage: FC = () => {
         if (error instanceof AxiosError) {
           const status = error.response?.status
           if (status === 404 || status === 403) {
+            console.error(error)
             setNotFound(true)
             return
           }
         }
+        console.error(error)
         setUnknownError(true)
       })
   }, [contactId])
@@ -73,6 +77,7 @@ export const ContactPage: FC = () => {
     setButtonDisabled(true)
     void sendNote(contactId)
       .then(addNote)
+      .catch(console.error)
       .finally(() => {
         setButtonDisabled(false)
       })
