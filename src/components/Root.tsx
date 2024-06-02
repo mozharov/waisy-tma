@@ -21,13 +21,13 @@ const ErrorBoundaryError: FC<{error: unknown}> = ({error}) => (
 
 const Inner: FC = () => {
   useEffect(() => {
-    // if (import.meta.env.DEV) {
-    import('eruda')
-      .then(lib => {
-        lib.default.init()
-      })
-      .catch(() => null)
-    // }
+    if (import.meta.env.DEV) {
+      import('eruda')
+        .then(lib => {
+          lib.default.init()
+        })
+        .catch(() => null)
+    }
   }, [])
 
   return (
