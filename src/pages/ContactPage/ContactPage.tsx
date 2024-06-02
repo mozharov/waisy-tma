@@ -77,7 +77,9 @@ export const ContactPage: FC = () => {
     setButtonDisabled(true)
     void sendNote(contactId)
       .then(addNote)
-      .catch(console.error)
+      .catch((error: unknown) => {
+        console.error(error)
+      })
       .finally(() => {
         setButtonDisabled(false)
       })

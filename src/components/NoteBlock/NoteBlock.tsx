@@ -34,7 +34,7 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
 
   const saveTextDebounced = useCallback(
     debounce((noteId: string, text: string) => {
-      saveText(noteId, text)
+      void saveText(noteId, text)
     }, 500),
     []
   )
@@ -57,13 +57,17 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
     const value = event.target.checked
     setIsPublic(value)
     sendPublicValue(note.id, value)
-      .catch(() => setIsPublic(!value))
-      .finally(() => setPublicDisabled(false))
+      .catch(() => {
+        setIsPublic(!value)
+      })
+      .finally(() => {
+        setPublicDisabled(false)
+      })
   }
 
   const handleDelete = () => {
     if (textareaValue.length && popup.supports('open')) {
-      popup
+      void popup
         .open({
           message: t('sure_delete'),
           buttons: [{text: t('delete'), type: 'destructive', id: 'delete'}, {type: 'cancel'}],
@@ -71,13 +75,13 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
         .then(buttonId => {
           if (buttonId === 'delete') {
             removeNote(note.id)
-            deleteNote(note.id)
+            void deleteNote(note.id)
           }
         })
       return
     }
     removeNote(note.id)
-    deleteNote(note.id)
+    void deleteNote(note.id)
   }
 
   return (
