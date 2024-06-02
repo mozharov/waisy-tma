@@ -10,6 +10,6 @@ export function getContactId(): string | null {
 
 export function getHeaders() {
   const {initDataRaw} = retrieveLaunchParams()
-  const headers = {authorization: `tma ${initDataRaw}`}
+  const headers = {'x-auth-tma': `tma ${initDataRaw}`}
   return headers
 }
