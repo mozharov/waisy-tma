@@ -22,6 +22,7 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
   const [textareaValue, setTextareaValue] = useState(note.text)
   const [textareaHeight, setTextareaHeight] = useState(defaultTextareaHeight)
   const [scrollHeight, setScrollHeight] = useState(defaltScrollHeight)
+  const [error, setError] = useState(false)
 
   useEffect(() => {
     const textareaElement = document.querySelector(`#textarea-${note.id}`)
@@ -35,6 +36,13 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
   const saveTextDebounced = useCallback(
     debounce((noteId: string, text: string) => {
       void saveText(noteId, text)
+        .then(() => {
+          setError(false)
+        })
+        .catch((error: unknown) => {
+          console.error(error)
+          setError(true)
+        })
     }, 500),
     []
   )
@@ -123,6 +131,7 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
         value={textareaValue}
         onChange={handleTextChange}
         disabled={!isOwner}
+        status={error ? 'error' : 'default'}
         style={{
           height: textareaHeight,
           backgroundColor: themeParams.bgColor,
