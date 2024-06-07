@@ -1,5 +1,5 @@
 import {Textarea, Checkbox, Cell, ButtonCell} from '@telegram-apps/telegram-ui'
-import {initPopup, useThemeParams} from '@tma.js/sdk-react'
+import {initPopup, useLaunchParams, useThemeParams} from '@tma.js/sdk-react'
 import axios from 'axios'
 import {useCallback, useEffect, useState, type FC} from 'react'
 import {Note} from './Note.types'
@@ -19,6 +19,7 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
 }) => {
   const {t} = useTranslation()
   const themeParams = useThemeParams()
+  const launchParams = useLaunchParams()
   const [textareaValue, setTextareaValue] = useState(note.text)
   const [textareaHeight, setTextareaHeight] = useState(defaultTextareaHeight)
   const [scrollHeight, setScrollHeight] = useState(defaltScrollHeight)
@@ -92,6 +93,8 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
     void deleteNote(note.id)
   }
 
+  const textareaBackgroundColor =
+    launchParams.platform === 'ios' ? themeParams.sectionBgColor : themeParams.bgColor
   return (
     <div
       style={{
@@ -134,7 +137,7 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
         status={error ? 'error' : 'default'}
         style={{
           height: textareaHeight,
-          backgroundColor: themeParams.bgColor,
+          backgroundColor: textareaBackgroundColor,
           minHeight: 24,
           overflow: 'hidden',
         }}

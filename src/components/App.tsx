@@ -7,6 +7,7 @@ import {
   useMiniApp,
   useThemeParams,
   useViewport,
+  useLaunchParams,
 } from '@tma.js/sdk-react'
 import {AppRoot} from '@telegram-apps/telegram-ui'
 import {type FC, useEffect, useMemo} from 'react'
@@ -17,6 +18,7 @@ export const App: FC = () => {
   const miniApp = useMiniApp()
   const themeParams = useThemeParams()
   const viewport = useViewport()
+  const launchParams = useLaunchParams()
 
   useEffect(() => {
     return bindMiniAppCSSVars(miniApp, themeParams)
@@ -32,7 +34,6 @@ export const App: FC = () => {
 
   const navigator = useMemo(() => initNavigator('app-navigation-state'), [])
   const [location, reactNavigator] = useIntegration(navigator)
-
   useEffect(() => {
     void navigator.attach()
     return () => {
@@ -40,11 +41,15 @@ export const App: FC = () => {
     }
   }, [navigator])
 
+  const backgroundColor =
+    launchParams.platform === 'ios' ? themeParams.sectionBgColor : themeParams.bgColor
+
   return (
     <AppRoot
       appearance={miniApp.isDark ? 'dark' : 'light'}
       platform={'ios'}
       style={{
+        backgroundColor,
         height: '100vh',
       }}
     >
