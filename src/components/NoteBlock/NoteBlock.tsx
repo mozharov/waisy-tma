@@ -75,6 +75,10 @@ export const NoteBlock: FC<{
       })
   }
 
+  useEffect(() => {
+    if (!publicPage) setIsPublic(false)
+  }, [publicPage])
+
   const handleDelete = () => {
     if (textareaValue.length && popup.supports('open')) {
       void popup
