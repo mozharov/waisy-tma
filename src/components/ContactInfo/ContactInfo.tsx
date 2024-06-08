@@ -16,7 +16,11 @@ const appName = import.meta.env.VITE_MINI_APP_NAME
 const botUsername = import.meta.env.VITE_BOT_USERNAME
 const {initData} = retrieveLaunchParams()
 
-export const ContactInfo: FC<{contact: Contact; isOwner: boolean}> = ({contact, isOwner}) => {
+export const ContactInfo: FC<{
+  contact: Contact
+  isOwner: boolean
+  setContact: (contact: Contact) => void
+}> = ({contact, isOwner, setContact}) => {
   const {t} = useTranslation()
   const [isPublic, setIsPublic] = useState(contact.public)
   const [publicDisabled, setPublicDisabled] = useState(false)
@@ -25,6 +29,7 @@ export const ContactInfo: FC<{contact: Contact; isOwner: boolean}> = ({contact, 
     setPublicDisabled(true)
     const {checked} = event.target
     setIsPublic(checked)
+    setContact({...contact, public: checked})
     sendPublicValue(contact.id, checked)
       .catch((error: unknown) => {
         setIsPublic(!checked)
