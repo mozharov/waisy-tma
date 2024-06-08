@@ -12,11 +12,12 @@ const defaultTextareaHeight = 24
 const defaltScrollHeight = 56
 const popup = initPopup()
 
-export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwner: boolean}> = ({
-  note,
-  removeNote,
-  isOwner,
-}) => {
+export const NoteBlock: FC<{
+  note: Note
+  removeNote: (id: string) => void
+  isOwner: boolean
+  publicPage: boolean
+}> = ({note, removeNote, isOwner, publicPage}) => {
   const {t} = useTranslation()
   const themeParams = useThemeParams()
   const launchParams = useLaunchParams()
@@ -110,7 +111,7 @@ export const NoteBlock: FC<{note: Note; removeNote: (id: string) => void; isOwne
               {t('delete')}
             </ButtonCell>
           </div>
-          <div>
+          <div style={{display: publicPage ? undefined : 'none'}}>
             <Cell
               after={
                 <Checkbox

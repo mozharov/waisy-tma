@@ -92,9 +92,14 @@ export const ContactPage: FC = () => {
   const maxNotesReached = notes.length >= maxNotes
   return (
     <div>
-      <ContactInfo contact={contact} isOwner={isOwner} />
+      <ContactInfo contact={contact} isOwner={isOwner} setContact={setContact} />
 
-      <NotesList removeNote={removeNote} notes={notes} isOwner={isOwner} />
+      <NotesList
+        removeNote={removeNote}
+        notes={notes}
+        isOwner={isOwner}
+        publicPage={contact.public}
+      />
 
       {isOwner && (
         <AddNoteButton disabled={maxNotesReached || buttonDisabled} onClick={handleAddNote} />

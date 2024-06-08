@@ -4,11 +4,12 @@ import {NoteBlock} from '../NoteBlock/NoteBlock'
 import {TitleBlock} from '../TitleBlock/TitleBlock'
 import {Note} from '../NoteBlock/Note.types'
 
-export const NotesList: FC<{notes: Note[]; removeNote: (id: string) => void; isOwner: boolean}> = ({
-  notes,
-  removeNote,
-  isOwner,
-}) => {
+export const NotesList: FC<{
+  notes: Note[]
+  removeNote: (id: string) => void
+  isOwner: boolean
+  publicPage: boolean
+}> = ({notes, removeNote, isOwner, publicPage}) => {
   const showTitle = !!notes.length
 
   return (
@@ -16,7 +17,13 @@ export const NotesList: FC<{notes: Note[]; removeNote: (id: string) => void; isO
       <TitleBlock showTitle={showTitle} isOwner={isOwner} />
       <List style={{paddingTop: 20}}>
         {notes.map(note => (
-          <NoteBlock removeNote={removeNote} key={note.id} note={note} isOwner={isOwner} />
+          <NoteBlock
+            removeNote={removeNote}
+            key={note.id}
+            note={note}
+            isOwner={isOwner}
+            publicPage={publicPage}
+          />
         ))}
       </List>
     </div>
