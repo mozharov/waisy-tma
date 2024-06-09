@@ -105,7 +105,7 @@ export const PublicPages: FC = () => {
   const utils = useUtils()
 
   const handleShare = () => {
-    let text = t('share_text')
+    let text = t('shate_public_text')
     if (contact?.username) text += `@${contact.username}`
     else if (contact?.name) text += contact.name
     else text += t('shate_text_end')
