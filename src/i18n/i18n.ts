@@ -23,6 +23,7 @@ const resources = {
       public_notes: "Someone's notes about this user",
       my_notes: 'Open my notes',
       all_public_notes: 'Open all public notes',
+      public_notes_list: 'All public notes about this user',
     },
   },
   ru: {
@@ -45,6 +46,7 @@ const resources = {
       public_notes: 'Чьи-то заметки об этом пользователе',
       my_notes: 'Открыть мои заметки',
       all_public_notes: 'Открыть все публичные заметки',
+      public_notes_list: 'Все публичные заметки о пользователе',
     },
   },
 }

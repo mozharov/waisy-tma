@@ -121,7 +121,6 @@ export const PublicPages: FC = () => {
 
   if (notFound || !id) return <NotFound />
   if (unknownError) return <UnknownError />
-  // TODO: кнопка поделиться публичной страницей
   return (
     <div>
       <Block>
@@ -170,7 +169,7 @@ export const PublicPages: FC = () => {
           </div>
           <div>
             <Cell
-              description="All public notes about this user"
+              description={t('public_notes_list')}
               style={{height: 32, backgroundColor: 'unset'}}
             />
           </div>
