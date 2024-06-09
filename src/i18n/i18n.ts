@@ -21,6 +21,7 @@ const resources = {
       share: 'Share',
       public_notes: "Someone's public notes about this user",
       my_notes: 'Open my notes',
+      all_public_notes: 'Open all public notes',
     },
   },
   ru: {
@@ -41,6 +42,7 @@ const resources = {
       share: 'Поделиться',
       public_notes: 'Чьи-то публичные заметки об этом пользователе',
       my_notes: 'Открыть мои заметки',
+      all_public_notes: 'Открыть все публичные заметки',
     },
   },
 }

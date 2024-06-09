@@ -1,5 +1,6 @@
 import type {ComponentType, JSX} from 'react'
 import {ContactPage} from '@/pages/ContactPage/ContactPage'
+import {PublicPages} from '@/pages/PublicPage/PublicPage'
 
 interface Route {
   path: string
@@ -8,4 +9,7 @@ interface Route {
   icon?: JSX.Element
 }
 
-export const routes: Route[] = [{path: '/', Component: ContactPage}]
+export const routes: Route[] = [
+  {path: '/users/:id', Component: PublicPages},
+  {path: '/contacts/:id', Component: ContactPage},
+]

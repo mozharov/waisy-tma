@@ -1,4 +1,4 @@
-import {useEffect, useMemo, useState, type FC} from 'react'
+import {useEffect, useState, type FC} from 'react'
 import axios, {AxiosError} from 'axios'
 import {ContactInfo} from '@/components/ContactInfo/ContactInfo'
 import {NotFound} from '@/components/NotFound/NotFound'
@@ -6,10 +6,13 @@ import {Loader} from '@/components/Loader/Loader'
 import {NotesList} from '@/components/NotesList/NotesList'
 import {AddNoteButton} from '@/components/AddNoteButton/AddNoteButton'
 import {Contact} from './Contact.types'
-import {getContactId, getHeaders} from '@/helpers'
+import {getHeaders} from '@/helpers'
 import {UnknownError} from '@/components/UnknownError/UnknownError'
 import {Note} from '@/components/NoteBlock/Note.types'
 import {retrieveLaunchParams} from '@tma.js/sdk-react'
+import {Button} from '@telegram-apps/telegram-ui'
+import {useNavigate, useParams} from 'react-router-dom'
+import {useTranslation} from 'react-i18next'
 
 const maxNotes = 300
 
@@ -20,14 +23,16 @@ export const ContactPage: FC = () => {
   const [unknownError, setUnknownError] = useState(false)
   const [notFound, setNotFound] = useState(false)
 
-  const contactId = useMemo(() => getContactId(), [])
+  const {id} = useParams()
 
   const [contact, setContact] = useState<Contact | null>(null)
   const [isOwner, setIsOwner] = useState(false)
 
   useEffect(() => {
-    if (!contactId) return
-    getContact(contactId)
+    if (!id) return
+    setContact(null)
+    setIsOwner(false)
+    getContact(id)
       .then(contact => {
         setContact(contact)
         if (contact.owner.telegramId.toString() === user?.id.toString()) setIsOwner(true)
@@ -44,12 +49,13 @@ export const ContactPage: FC = () => {
         console.error(error)
         setUnknownError(true)
       })
-  }, [contactId])
+  }, [id])
 
   const [notes, setNotes] = useState<Note[] | null>(null)
   useEffect(() => {
-    if (!contactId) return
-    getNotes(contactId)
+    if (!id) return
+    setNotes(null)
+    getNotes(id)
       .then(setNotes)
       .catch((error: unknown) => {
         if (error instanceof AxiosError) {
@@ -63,7 +69,7 @@ export const ContactPage: FC = () => {
         console.error(error)
         setUnknownError(true)
       })
-  }, [contactId])
+  }, [id])
 
   const removeNote = (id: string) => {
     if (notes) setNotes(notes.filter(note => note.id !== id))
@@ -73,9 +79,9 @@ export const ContactPage: FC = () => {
   }
   const [buttonDisabled, setButtonDisabled] = useState(false)
   const handleAddNote = () => {
-    if (!contactId) return
+    if (!id) return
     setButtonDisabled(true)
-    void sendNote(contactId)
+    void sendNote(id)
       .then(addNote)
       .catch((error: unknown) => {
         console.error(error)
@@ -85,7 +91,10 @@ export const ContactPage: FC = () => {
       })
   }
 
-  if (notFound || !contactId) return <NotFound />
+  const navigate = useNavigate()
+  const {t} = useTranslation()
+
+  if (notFound || !id) return <NotFound />
   if (unknownError || !initData || !user) return <UnknownError />
   if (!contact || !notes) return <Loader />
 
@@ -94,6 +103,19 @@ export const ContactPage: FC = () => {
     <div>
       <ContactInfo contact={contact} isOwner={isOwner} setContact={setContact} />
 
+      <div style={{padding: '0px 40px 0px'}}>
+        <Button
+          mode="gray"
+          size="s"
+          stretched={true}
+          onClick={() => {
+            navigate(`/users/${contact.telegramId}`)
+          }}
+        >
+          {t('all_public_notes')}
+        </Button>
+      </div>
+      <div style={{padding: '10px 0px'}}></div>
       <NotesList
         removeNote={removeNote}
         notes={notes}

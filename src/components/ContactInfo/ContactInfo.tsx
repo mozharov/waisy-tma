@@ -9,6 +9,7 @@ import axios from 'axios'
 import {initUtils, initPopup} from '@tma.js/sdk'
 import {retrieveLaunchParams} from '@tma.js/sdk-react'
 import {useTranslation} from 'react-i18next'
+import {useNavigate} from 'react-router-dom'
 
 const utils = initUtils()
 const popup = initPopup()
@@ -19,7 +20,7 @@ const {initData} = retrieveLaunchParams()
 export const ContactInfo: FC<{
   contact: Contact
   isOwner: boolean
-  setContact: (contact: Contact) => void
+  setContact?: (contact: Contact | null) => void
 }> = ({contact, isOwner, setContact}) => {
   const {t} = useTranslation()
   const [isPublic, setIsPublic] = useState(contact.public)
@@ -29,7 +30,7 @@ export const ContactInfo: FC<{
     setPublicDisabled(true)
     const {checked} = event.target
     setIsPublic(checked)
-    setContact({...contact, public: checked})
+    setContact && setContact({...contact, public: checked})
     sendPublicValue(contact.id, checked)
       .catch((error: unknown) => {
         setIsPublic(!checked)
@@ -54,6 +55,7 @@ export const ContactInfo: FC<{
     )
   }
 
+  const navigate = useNavigate()
   const [openNotesDisabled, setOpenNotesDisabled] = useState(false)
   const handleOpenNotes = () => {
     setOpenNotesDisabled(true)
@@ -63,7 +65,7 @@ export const ContactInfo: FC<{
     }
     sendContact(contact, initData.user.id)
       .then(({id}) => {
-        utils.openTelegramLink(`https://t.me/${botUsername}/${appName}?startapp=${id}`)
+        navigate(`/contacts/${id}`)
       })
       .catch((error: unknown) => {
         console.error(error)
@@ -82,7 +84,6 @@ export const ContactInfo: FC<{
               paddingTop: 10,
               display: 'flex',
               justifyContent: 'space-between',
-              paddingBottom: 10,
             }}
           >
             <div style={{paddingLeft: 10}}>
@@ -115,7 +116,7 @@ export const ContactInfo: FC<{
         )}
       </Block>
       {!isOwner && (
-        <div style={{padding: '0px 40px 40px'}}>
+        <div style={{padding: '0px 40px 10px'}}>
           <Button
             disabled={openNotesDisabled}
             mode="gray"
