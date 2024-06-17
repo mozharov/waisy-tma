@@ -48,8 +48,8 @@ export const ContactInfo: FC<{
     }
     let text = t('share_text')
     if (contact.username) text += `@${contact.username}`
-    else if (contact.name) text += contact.name
-    else text += t('shate_text_end')
+    else if (contact.firstName) text += `${contact.firstName} ${contact.lastName ?? ''}`
+    else text += t('share_text_end')
     utils.openTelegramLink(
       `https://t.me/share/url?url=https://t.me/${botUsername}/${appName}?startapp=${contact.id}&text=${text}`
     )
@@ -142,7 +142,8 @@ async function sendContact(contact: Contact, ownerTelegramId: number): Promise<{
   const res = await axios.post(
     `${apiOrigin}/contacts`,
     {
-      name: contact.name,
+      firstName: contact.firstName,
+      lastName: contact.lastName,
       username: contact.username,
       photo: contact.photo,
       ownerTelegramId,

@@ -35,7 +35,7 @@ export const ContactPage: FC = () => {
     getContact(id)
       .then(contact => {
         setContact(contact)
-        if (contact.owner.telegramId.toString() === user?.id.toString()) setIsOwner(true)
+        if (contact.owner) setIsOwner(true)
       })
       .catch((error: unknown) => {
         if (error instanceof AxiosError) {

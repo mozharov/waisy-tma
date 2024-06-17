@@ -8,7 +8,7 @@ const apiOrigin = import.meta.env.VITE_API_ORIGIN
 export const AvatarCell: FC<{contact: Contact}> = ({contact}) => {
   const themeParams = useThemeParams()
   const [visibleAvatarSkelet, setVisibleAvatarSkelet] = useState(!!contact.photo)
-  const char = contact.name ? contact.name[0] : '?'
+  const char = contact.firstName ? contact.firstName[0] : '?'
   const username = contact.username && `@${contact.username}`
 
   const photoUrl = contact.photo && `${apiOrigin}/files/${contact.photo}`
@@ -37,7 +37,7 @@ export const AvatarCell: FC<{contact: Contact}> = ({contact}) => {
       }
       subtitle={username}
     >
-      {contact.name}
+      {contact.firstName} {contact.lastName}
     </Cell>
   )
 }

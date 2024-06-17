@@ -16,11 +16,12 @@ const apiOrigin = import.meta.env.VITE_API_ORIGIN
 const appName = import.meta.env.VITE_MINI_APP_NAME
 const botUsername = import.meta.env.VITE_BOT_USERNAME
 
-interface User {
+interface PublicContact {
   telegramId: number
-  name?: string
-  username?: string
-  photo?: string
+  firstName?: string | null
+  lastName?: string | null
+  username?: string | null
+  photo?: string | null
 }
 
 const {initData} = retrieveLaunchParams()
@@ -31,9 +32,9 @@ export const PublicPages: FC = () => {
   const [notFound, setNotFound] = useState(false)
   const [unknownError, setUnknownError] = useState(false)
 
-  const [contact, setContact] = useState<User | null>(null)
+  const [contact, setContact] = useState<PublicContact | null>(null)
   useEffect(() => {
-    getUser(Number(id))
+    getPublicContact(Number(id))
       .then(contact => {
         setContact(contact)
       })
@@ -90,7 +91,7 @@ export const PublicPages: FC = () => {
       setOpenNotesDisabled(false)
       return
     }
-    sendContact(contact, initData.user.id)
+    sendContact(contact)
       .then(({id}) => {
         navigate(`/contacts/${id}`)
       })
@@ -105,10 +106,10 @@ export const PublicPages: FC = () => {
   const utils = useUtils()
 
   const handleShare = () => {
-    let text = t('shate_public_text')
+    let text = t('share_public_text')
     if (contact?.username) text += `@${contact.username}`
-    else if (contact?.name) text += contact.name
-    else text += t('shate_text_end')
+    else if (contact?.firstName) text += `${contact.firstName} ${contact.lastName ?? ''}`
+    else text += t('share_text_end')
     utils.openTelegramLink(
       `https://t.me/share/url?url=https://t.me/${botUsername}/${appName}?startapp=${contact?.telegramId}&text=${text}`
     )
@@ -116,9 +117,8 @@ export const PublicPages: FC = () => {
 
   if (!contact || !notes) return <Loader />
 
-  const photoUrl = contact.photo && `${apiOrigin}/files/${contact.photo}`
-  const char = contact.name ? contact.name[0] : '?'
-
+  const photoUrl = contact.photo ? `${apiOrigin}/files/${contact.photo}` : undefined
+  const char = contact.firstName ? contact.firstName[0] : '?'
   if (notFound || !id) return <NotFound />
   if (unknownError) return <UnknownError />
   return (
@@ -161,7 +161,7 @@ export const PublicPages: FC = () => {
           }
           subtitle={`@${contact.username}`}
         >
-          {contact.name}
+          {contact.firstName} {contact.lastName}
         </Cell>
         <div>
           <div style={{padding: 10}}>
@@ -192,9 +192,9 @@ export const PublicPages: FC = () => {
 }
 
 const headers = getHeaders()
-async function getUser(telegramId: number): Promise<User> {
+async function getPublicContact(telegramId: number): Promise<PublicContact> {
   const res = await axios.get(`${apiOrigin}/public/${telegramId}`, {headers})
-  return res.data as User
+  return res.data as PublicContact
 }
 
 async function getNotes(telegramId: number): Promise<Note[]> {
@@ -202,14 +202,14 @@ async function getNotes(telegramId: number): Promise<Note[]> {
   return res.data as Note[]
 }
 
-async function sendContact(contact: User, ownerTelegramId: number): Promise<{id: string}> {
+async function sendContact(contact: PublicContact): Promise<{id: string}> {
   const res = await axios.post(
     `${apiOrigin}/contacts`,
     {
-      name: contact.name,
+      firstName: contact.firstName,
+      lastName: contact.lastName,
       username: contact.username,
       photo: contact.photo,
-      ownerTelegramId,
       telegramId: contact.telegramId,
     },
     {headers}

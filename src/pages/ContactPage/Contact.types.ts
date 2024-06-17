@@ -1,11 +1,12 @@
 export interface Contact {
   id: string
   telegramId: number
-  name?: string
+  firstName?: string
+  lastName?: string
   username?: string
   photo?: string
   public: boolean
-  owner: {
+  owner?: {
     id: string
     telegramId: number
   }
