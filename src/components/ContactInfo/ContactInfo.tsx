@@ -10,6 +10,7 @@ import {initUtils, initPopup} from '@tma.js/sdk'
 import {retrieveLaunchParams} from '@tma.js/sdk-react'
 import {useTranslation} from 'react-i18next'
 import {useNavigate} from 'react-router-dom'
+import {usePostHog} from 'posthog-js/react'
 
 const utils = initUtils()
 const popup = initPopup()
@@ -25,10 +26,12 @@ export const ContactInfo: FC<{
   const {t} = useTranslation()
   const [isPublic, setIsPublic] = useState(contact.public)
   const [publicDisabled, setPublicDisabled] = useState(false)
+  const posthog = usePostHog()
 
   const handlePublic = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPublicDisabled(true)
     const {checked} = event.target
+    posthog.capture('clicked make contact public button', {contactId: contact.id, public: checked})
     setIsPublic(checked)
     setContact && setContact({...contact, public: checked})
     sendPublicValue(contact.id, checked)
@@ -42,6 +45,7 @@ export const ContactInfo: FC<{
   }
 
   const handleShare = () => {
+    posthog.capture('clicked share button from private notes', {contactId: contact.id})
     if (!isPublic) {
       void popup.open({message: t('make_public')})
       return
@@ -58,6 +62,7 @@ export const ContactInfo: FC<{
   const navigate = useNavigate()
   const [openNotesDisabled, setOpenNotesDisabled] = useState(false)
   const handleOpenNotes = () => {
+    posthog.capture('clicked open private notes button from someone\'s notes', {contactId: contact.id})
     setOpenNotesDisabled(true)
     if (!initData?.user?.id) {
       console.error('no user id')

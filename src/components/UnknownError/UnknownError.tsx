@@ -6,7 +6,7 @@ import {useTranslation} from 'react-i18next'
 export const UnknownError: FC = () => {
   const {t} = useTranslation()
   const [animationData, setAnimationData] = useState<unknown>(null)
-  import('./unknown-error.json').then(setAnimationData)
+  void import('./unknown-error.json').then(setAnimationData)
   return (
     <div style={{height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
       <Placeholder description={t('unknown_error')}>

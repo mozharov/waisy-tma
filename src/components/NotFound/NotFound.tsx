@@ -6,7 +6,7 @@ import {useTranslation} from 'react-i18next'
 export const NotFound: FC = () => {
   const {t} = useTranslation()
   const [animationData, setAnimationData] = useState<unknown>(null)
-  import('./not-found.json').then(setAnimationData)
+  void import('./not-found.json').then(setAnimationData)
   return (
     <div style={{height: '100%', display: 'flex', justifyContent: 'center', alignItems: 'center'}}>
       <Placeholder description={t('not_found')}>

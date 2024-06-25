@@ -11,6 +11,7 @@ import axios, {AxiosError} from 'axios'
 import {FC, useEffect, useState} from 'react'
 import {useTranslation} from 'react-i18next'
 import {useNavigate, useParams} from 'react-router-dom'
+import {usePostHog} from 'posthog-js/react'
 
 const apiOrigin = import.meta.env.VITE_API_ORIGIN
 const appName = import.meta.env.VITE_MINI_APP_NAME
@@ -31,9 +32,12 @@ export const PublicPages: FC = () => {
   const themeParams = useThemeParams()
   const [notFound, setNotFound] = useState(false)
   const [unknownError, setUnknownError] = useState(false)
+  const posthog = usePostHog()
 
   const [contact, setContact] = useState<PublicContact | null>(null)
   useEffect(() => {
+    if (!id) return
+    posthog.capture('opened public contact page', {contactId: id})
     getPublicContact(Number(id))
       .then(contact => {
         setContact(contact)
@@ -50,7 +54,7 @@ export const PublicPages: FC = () => {
         console.error(error)
         setUnknownError(true)
       })
-  }, [id])
+  }, [id, posthog])
 
   const [notes, setNotes] = useState<Note[] | null>(null)
   useEffect(() => {
@@ -80,6 +84,7 @@ export const PublicPages: FC = () => {
   const navigate = useNavigate()
   const [openNotesDisabled, setOpenNotesDisabled] = useState(false)
   const handleOpenNotes = () => {
+    posthog.capture('opened private contact notes from public page', {contactId: id})
     setOpenNotesDisabled(true)
     if (!initData?.user?.id) {
       console.error('no user id')
@@ -106,6 +111,7 @@ export const PublicPages: FC = () => {
   const utils = useUtils()
 
   const handleShare = () => {
+    posthog.capture('shared public contact', {contactId: id})
     let text = t('share_public_text')
     if (contact?.username) text += `@${contact.username}`
     else if (contact?.firstName) text += `${contact.firstName} ${contact.lastName ?? ''}`

@@ -14,12 +14,27 @@ import {type FC, useEffect, useMemo} from 'react'
 import {Route, Router, Routes} from 'react-router-dom'
 import {routes} from '@/navigation/routes.tsx'
 import {getContactId} from '@/helpers'
+import {usePostHog} from 'posthog-js/react'
 
 export const App: FC = () => {
   const miniApp = useMiniApp()
   const themeParams = useThemeParams()
   const viewport = useViewport()
   const launchParams = useLaunchParams()
+  const posthog = usePostHog()
+
+  const user = launchParams.initData?.user
+  useEffect(() => {
+    if (!user) return
+    posthog.identify(user.id.toString(), {
+      first_name: user.firstName,
+      last_name: user.lastName,
+      username: user.username,
+      telegram_premium: user.isPremium,
+      language_code: user.languageCode,
+      allows_write_to_pm: user.allowsWriteToPm
+    })
+  }, [posthog, user])
 
   useEffect(() => {
     return bindMiniAppCSSVars(miniApp, themeParams)

@@ -6,10 +6,11 @@ import {Note} from './Note.types'
 import {getHeaders} from '@/helpers'
 import debounce from 'lodash/debounce'
 import {useTranslation} from 'react-i18next'
+import {usePostHog} from 'posthog-js/react'
 
 const maxLength = 10000
 const defaultTextareaHeight = 24
-const defaltScrollHeight = 56
+const defaultScrollHeight = 56
 const popup = initPopup()
 
 export const NoteBlock: FC<{
@@ -23,20 +24,22 @@ export const NoteBlock: FC<{
   const launchParams = useLaunchParams()
   const [textareaValue, setTextareaValue] = useState(note.text)
   const [textareaHeight, setTextareaHeight] = useState(defaultTextareaHeight)
-  const [scrollHeight, setScrollHeight] = useState(defaltScrollHeight)
+  const [scrollHeight, setScrollHeight] = useState(defaultScrollHeight)
   const [error, setError] = useState(false)
+  const posthog = usePostHog()
 
   useEffect(() => {
     const textareaElement = document.querySelector(`#textarea-${note.id}`)
     if (!textareaElement) return
-    if (textareaElement.scrollHeight !== defaltScrollHeight) {
+    if (textareaElement.scrollHeight !== defaultScrollHeight) {
       setScrollHeight(textareaElement.scrollHeight)
-      setTextareaHeight(defaultTextareaHeight + textareaElement.scrollHeight - defaltScrollHeight)
+      setTextareaHeight(defaultTextareaHeight + textareaElement.scrollHeight - defaultScrollHeight)
     }
   }, [note.id])
 
   const saveTextDebounced = useCallback(
     debounce((noteId: string, text: string) => {
+      posthog.capture('updated note')
       void saveText(noteId, text)
         .then(() => {
           setError(false)
@@ -65,6 +68,7 @@ export const NoteBlock: FC<{
   const handlePublicChange = (event: React.ChangeEvent<HTMLInputElement>) => {
     setPublicDisabled(true)
     const value = event.target.checked
+    posthog.capture('clicked make note public button', {public: value})
     setIsPublic(value)
     sendPublicValue(note.id, value)
       .catch(() => {
@@ -80,7 +84,9 @@ export const NoteBlock: FC<{
   }, [publicPage])
 
   const handleDelete = () => {
+    posthog.capture('clicked delete note button')
     if (textareaValue.length && popup.supports('open')) {
+      posthog.capture('viewed delete note popup')
       void popup
         .open({
           message: t('sure_delete'),

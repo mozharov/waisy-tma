@@ -13,6 +13,7 @@ import {retrieveLaunchParams} from '@tma.js/sdk-react'
 import {Button} from '@telegram-apps/telegram-ui'
 import {useNavigate, useParams} from 'react-router-dom'
 import {useTranslation} from 'react-i18next'
+import {usePostHog} from 'posthog-js/react'
 
 const maxNotes = 300
 
@@ -27,6 +28,12 @@ export const ContactPage: FC = () => {
 
   const [contact, setContact] = useState<Contact | null>(null)
   const [isOwner, setIsOwner] = useState(false)
+  const posthog = usePostHog()
+
+  useEffect(() => {
+    if (!id) return
+    posthog.capture('opened private contact page', {contactId: id})
+  }, [id, posthog])
 
   useEffect(() => {
     if (!id) return
@@ -72,6 +79,7 @@ export const ContactPage: FC = () => {
   }, [id])
 
   const removeNote = (id: string) => {
+    posthog.capture('deleted note', {contactId: id})
     if (notes) setNotes(notes.filter(note => note.id !== id))
   }
   const addNote = (note: Note) => {
@@ -79,6 +87,7 @@ export const ContactPage: FC = () => {
   }
   const [buttonDisabled, setButtonDisabled] = useState(false)
   const handleAddNote = () => {
+    posthog.capture('added note', {contactId: id})
     if (!id) return
     setButtonDisabled(true)
     void sendNote(id)
